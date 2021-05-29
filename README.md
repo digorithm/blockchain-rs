@@ -20,7 +20,8 @@ There a lot of missing features I would like to add someday for fun:
 5. Different consensus algorithms such as Proof-of-Stake;
 6. Much more validations and assertions;
 7. For PoW: configurable and dynamic mining difficulty (right now it's hardcoded);
-8. And much more.
+8. Remove most of the `.clone()` parts in the codebase that I inserted for speed-of-development reasons (I ain't got no time to fight you, borrow checker!). Removing should improve memory efficiency considerably;
+9. And much more.
 
 ## Running nodes and interacting with them
 
