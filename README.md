@@ -2,7 +2,9 @@
 
 Simple proof of concept blockchain written in Rust. _Do not build the next Dogecoin on top of this, I won't be held responsible!_
 
-Jokes aside, this was built for learning purposes, it support basic blockchain capabilities such as multi-node Proof-of-Work consensus. It exposes a HTTP API with the following endpoints:
+**Jokes aside, this was built for learning purposes, meaning it's not production-quality at all.**
+
+It support basic blockchain capabilities such as multi-node Proof-of-Work consensus. It exposes a HTTP API with the following endpoints:
 
 ```rust
 .service(web::resource("/nodes/register").route(web::post().to(register)))
