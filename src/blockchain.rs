@@ -1,5 +1,5 @@
 use data_encoding::HEXUPPER;
-use log::{info, debug};
+use log::{debug, info};
 use ring::digest::{Context, SHA256};
 use serde::{Deserialize, Serialize};
 use std::time::SystemTime;
@@ -180,13 +180,12 @@ impl Blockchain {
     // In this case, we only compare the chain up to this node's chain length
     // i.e `peer_chain[0..self.chain.len()]`
     pub fn is_chain_valid(&self, peer_chain: Vec<Block>) -> bool {
-
         let is_valid: Result<Vec<_>, _> = peer_chain[0..self.chain.len()]
-        // Get each adjacent pair of the chain
-        .windows(2) 
-        // Check that each adjacent pair is valid
-        .map(|block_pair| self.valid_adjacent_blocks(&block_pair[0], &block_pair[1]))
-        .collect();
+            // Get each adjacent pair of the chain
+            .windows(2)
+            // Check that each adjacent pair is valid
+            .map(|block_pair| self.valid_adjacent_blocks(&block_pair[0], &block_pair[1]))
+            .collect();
 
         match is_valid {
             Ok(_) => return true,
@@ -202,12 +201,12 @@ impl Blockchain {
 
         if current.previous_hash != last_block_hash {
             debug!("invalid chain: different hashes");
-            return Err(false)
+            return Err(false);
         }
 
         if !self.valid_proof(previous.proof, current.proof, &last_block_hash) {
             debug!("invalid chain: proof invalid");
-            return Err(false)
+            return Err(false);
         }
 
         Ok(())
