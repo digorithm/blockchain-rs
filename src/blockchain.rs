@@ -1,5 +1,5 @@
 use data_encoding::HEXUPPER;
-use log::info;
+use log::{info, debug};
 use ring::digest::{Context, SHA256};
 use serde::{Deserialize, Serialize};
 use std::time::SystemTime;
@@ -124,7 +124,7 @@ impl Blockchain {
         let last_hash = self.hash_block(&last_block);
 
         let mut proof: u64 = 0;
-        while self.valid_proof(last_proof, proof, last_hash.clone()) != true {
+        while self.valid_proof(last_proof, proof, &last_hash) != true {
             proof += 1;
         }
         proof
@@ -152,7 +152,7 @@ impl Blockchain {
 
     // Validates the Proof: Does hash(last_proof, proof, last_hash) contain 4 leading zeroes?
     // Pretty sure there's some optimizations to be done here.
-    fn valid_proof(&self, last_proof: u64, proof: u64, last_block_hash: String) -> bool {
+    fn valid_proof(&self, last_proof: u64, proof: u64, last_block_hash: &str) -> bool {
         let guess = format!("{}{}{}", last_proof, proof, last_block_hash);
 
         let hashed_guess = self.hash(guess.into_bytes());
@@ -175,33 +175,42 @@ impl Blockchain {
         false
     }
 
-    // Check if a blockchain is valid
-    pub fn is_chain_valid(&self, chain: Vec<Block>) -> bool {
-        let mut last_block = &chain[0];
-        let mut current_idx = 1;
+    // Check if a blockchain is valid.
+    // This is used to compare a chain that's longer than this node's chain.
+    // In this case, we only compare the chain up to this node's chain length
+    // i.e `peer_chain[0..self.chain.len()]`
+    pub fn is_chain_valid(&self, peer_chain: Vec<Block>) -> bool {
 
-        while current_idx < self.chain.len() {
-            // Get the block of this chain's index
-            let block = &chain[current_idx];
+        let is_valid: Result<Vec<_>, _> = peer_chain[0..self.chain.len()]
+        // Get each adjacent pair of the chain
+        .windows(2) 
+        // Check that each adjacent pair is valid
+        .map(|block_pair| self.valid_adjacent_blocks(&block_pair[0], &block_pair[1]))
+        .collect();
 
-            let last_block_hash = self.hash_block(last_block);
+        match is_valid {
+            Ok(_) => return true,
+            Err(_) => return false,
+        }
+    }
 
-            // If they have different hashes, return false.
-            if block.previous_hash != last_block_hash {
-                info!("invalid chain: different hashes");
-                return false;
-            }
+    // Checks if two adjacent blocks are valid, i.e they have the correct hash
+    // and the proof of work from the previous to the current block is correct.
+    // This is used to validate the whole chain, see [`is_chain_valid`].
+    fn valid_adjacent_blocks(&self, previous: &Block, current: &Block) -> Result<(), bool> {
+        let last_block_hash = self.hash_block(previous);
 
-            if !self.valid_proof(last_block.proof, block.proof, last_block_hash) {
-                info!("invalid chain: proof invalid");
-                return false;
-            }
-
-            last_block = block;
-            current_idx += 1;
+        if current.previous_hash != last_block_hash {
+            debug!("invalid chain: different hashes");
+            return Err(false)
         }
 
-        return true;
+        if !self.valid_proof(previous.proof, current.proof, &last_block_hash) {
+            debug!("invalid chain: proof invalid");
+            return Err(false)
+        }
+
+        Ok(())
     }
 
     pub fn resolve_conflicts(&mut self) -> bool {
