@@ -4,6 +4,8 @@ use ring::digest::{Context, SHA256};
 use serde::{Deserialize, Serialize};
 use std::time::SystemTime;
 use uuid::Uuid;
+use std::collections::HashSet;
+
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Transaction {
@@ -35,7 +37,7 @@ impl Block {
 #[derive(Clone, Debug)]
 pub struct Blockchain {
     pub node_id: Uuid,
-    pub nodes: Vec<String>, // Vector of URL-like addresses
+    pub nodes: HashSet<String>, // Vector of URL-like addresses
     pub chain: Vec<Block>,
     pub current_transactions: Vec<Transaction>,
 }
@@ -46,7 +48,7 @@ impl Blockchain {
             node_id: Uuid::new_v4(),
             chain: Vec::new(),
             current_transactions: Vec::new(),
-            nodes: Vec::new(),
+            nodes: HashSet::new(),
         };
 
         // Genesis block
@@ -58,7 +60,7 @@ impl Blockchain {
     pub fn register_node(&mut self, addr: String) {
         // TODO: Add address validation.
         if !self.nodes.contains(&addr) {
-            self.nodes.push(addr);
+            self.nodes.insert(addr);
         }
     }
 

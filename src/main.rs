@@ -3,7 +3,7 @@ use actix_web::{web, App, Error, HttpResponse, HttpServer, Responder};
 use log::info;
 use serde::{Deserialize, Serialize};
 use std::env;
-use std::sync::*;
+use std::sync::{Arc, Mutex};
 
 use blockchain::blockchain::Blockchain;
 
